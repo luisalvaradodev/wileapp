@@ -413,7 +413,7 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
                           key={product.id}
                           className="group cursor-pointer bg-gradient-to-br from-white via-white to-green-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-green-900/20 border-2 border-green-200/60 dark:border-green-700/60 hover:border-green-400 dark:hover:border-green-500"
                           hoverEffect
-                          onClick={() => addProductToCart(product)}
+                          
                         >
                           {/* Status Badges */}
                           <div className="flex justify-between items-start mb-3">
@@ -490,7 +490,7 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
                           key={combo.id}
                           className="group cursor-pointer bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/20 border-2 border-blue-200/60 dark:border-blue-700/60 hover:border-blue-400 dark:hover:border-blue-500"
                           hoverEffect
-                          onClick={() => addComboToCart(combo)}
+                          
                         >
                           {/* Combo Header */}
                           <div className="flex justify-between items-start mb-3">

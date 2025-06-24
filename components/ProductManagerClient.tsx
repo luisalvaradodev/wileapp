@@ -107,7 +107,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
       setLoading(true);
       const productData = {
         name: productFormData.name,
-        category_id: productFormData.category_id || null,
+        category_id: productFormData.category_id || undefined,
         cost_price: parseFloat(productFormData.cost_price) || 0,
         sale_price: parseFloat(productFormData.sale_price),
         stock_quantity: parseInt(productFormData.stock_quantity),
@@ -142,7 +142,22 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
         name: comboFormData.name,
         description: comboFormData.description,
         discount_percentage: parseFloat(comboFormData.discount_percentage),
-        is_active: comboFormData.is_active
+        is_active: comboFormData.is_active,
+        sale_price: (() => {
+          // Calculate sale price for the combo
+          const basePrice = comboItems.reduce((total, item) => {
+            const product = products.find(p => p.id === item.product_id);
+            return total + (product ? product.sale_price * item.quantity : 0);
+          }, 0);
+          return basePrice * (1 - parseFloat(comboFormData.discount_percentage) / 100);
+        })(),
+        total_cost: (() => {
+          // Calculate total cost for the combo
+          return comboItems.reduce((total, item) => {
+            const product = products.find(p => p.id === item.product_id);
+            return total + (product ? product.cost_price * item.quantity : 0);
+          }, 0);
+        })()
       };
       
       if (editingCombo) {
