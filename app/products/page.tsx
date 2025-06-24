@@ -2,6 +2,8 @@ import React from 'react';
 import { ProductManagerClient } from '../../components/ProductManagerClient';
 import { getProducts, getCategories, fetchExchangeRate } from '../../lib/api';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProductsPage() {
   try {
     const [products, categories, exchangeRateInfo] = await Promise.all([

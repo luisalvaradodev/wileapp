@@ -3,6 +3,8 @@ import { SalesManagerClient } from '../../components/SalesManagerClient';
 import { getProducts, getSalesHistory, fetchExchangeRate } from '../../lib/api';
 import { getDefaultUserId } from '../../lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SalesPage() {
   try {
     const userId = getDefaultUserId();

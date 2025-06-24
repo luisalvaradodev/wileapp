@@ -3,6 +3,8 @@ import { DashboardClient } from '../components/DashboardClient';
 import { getDashboardStats, getSalesHistory, fetchExchangeRate } from '../lib/api';
 import { getDefaultUserId } from '../lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   try {
     const userId = getDefaultUserId();
