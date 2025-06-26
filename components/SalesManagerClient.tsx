@@ -234,8 +234,8 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
 
       if (editingSale) {
         // Convert original sale items to the format expected by updateSale
-        const originalItems = editingSale.sale_items.map(item => ({
-          product_id: item.product_id,
+        const originalItems = (editingSale.sale_items ?? []).map(item => ({
+          product_id: (item as any).product_id ?? item.product_name,
           quantity: item.quantity
         }));
 
@@ -246,19 +246,23 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
           originalItems
         );
 
-        toast({
-          title: "Venta actualizada",
-          description: "¡La venta se ha actualizado exitosamente!",
-          className: "bg-green-500 text-white border-0"
-        });
+        toast(
+          <div>
+            <div className="font-bold">Venta actualizada</div>
+            <div>¡La venta se ha actualizado exitosamente!</div>
+          </div>,
+          { className: "bg-green-500 text-white border-0" }
+        );
       } else {
         await createSale(saleData, saleItems);
         
-        toast({
-          title: "Venta registrada",
-          description: "¡La venta se ha registrado exitosamente!",
-          className: "bg-green-500 text-white border-0"
-        });
+        toast(
+          <div>
+            <div className="font-bold">Venta registrada</div>
+            <div>¡La venta se ha registrado exitosamente!</div>
+          </div>,
+          { className: "bg-green-500 text-white border-0" }
+        );
       }
       
       // Reset form
@@ -274,11 +278,7 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
       setSalesHistory(updatedHistory);
     } catch (error: any) {
       console.error('Error saving sale:', error);
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo guardar la venta",
-        variant: "destructive"
-      });
+      toast.error(error.message || "No se pudo guardar la venta");
     } finally {
       setLoading(false);
     }
@@ -288,22 +288,20 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
     if (!deletingSale) return;
     
     if (verificationCode !== '1234') {
-      toast({
-        title: "Código incorrecto",
-        description: "El código de verificación es incorrecto",
-        variant: "destructive"
-      });
+      toast.error("El código de verificación es incorrecto");
       return;
     }
     
     try {
       await deleteSale(deletingSale.id);
       
-      toast({
-        title: "Venta eliminada",
-        description: "La venta ha sido eliminada exitosamente",
-        className: "bg-green-500 text-white border-0"
-      });
+      toast(
+        <div>
+          <div className="font-bold">Venta eliminada</div>
+          <div>La venta ha sido eliminada exitosamente</div>
+        </div>,
+        { className: "bg-green-500 text-white border-0" }
+      );
       
       // Refresh sales history
       const userId = getDefaultUserId();
@@ -314,11 +312,13 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
       setVerificationCode('');
     } catch (error) {
       console.error('Error deleting sale:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la venta",
-        variant: "destructive"
-      });
+      toast(
+        <div>
+          <div className="font-bold text-red-600">Error</div>
+          <div>No se pudo eliminar la venta</div>
+        </div>,
+        { className: "bg-red-500 text-white border-0" }
+      );
     }
   };
 
@@ -332,15 +332,18 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
 
   const handleEditSale = (sale: SalesHistory) => {
     // Convert sale items to cart items
-    const cartItems: CartItem[] = sale.sale_items.map(item => {
-      const product = products.find(p => p.id === item.product_id);
+    const cartItems: CartItem[] = (sale.sale_items ?? []).map(item => {
+      // Use optional chaining and fallback for missing properties
+      const productId = (item as any).product_id ?? item.product_name;
+      const costPrice = (item as any).cost_price ?? 0;
+      const product = products.find(p => p.id === productId);
       if (product) {
         return {
           type: 'product' as const,
           id: product.id,
           name: product.name,
           price: item.unit_price,
-          cost: item.cost_price,
+          cost: costPrice,
           quantity: item.quantity,
           data: product
         };
@@ -348,10 +351,10 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
         // If product not found, create a placeholder
         return {
           type: 'product' as const,
-          id: item.product_id,
+          id: item.product_name, // fallback to product_name as id if product_id does not exist
           name: item.product_name,
           price: item.unit_price,
-          cost: item.cost_price,
+          cost: costPrice, // or another default value if cost is not available
           quantity: item.quantity,
           data: {} as Product
         };
@@ -366,7 +369,7 @@ export const SalesManagerClient: React.FC<SalesManagerClientProps> = ({
       usd: sale.payment_method_usd.toString()
     });
     setExpenses(sale.expenses_bs.toString());
-    setNotes(sale.notes || '');
+    setNotes((sale as any).notes || '');
     setEditingSale(sale);
     setActiveTab('sale'); // Switch to sale tab
   };
