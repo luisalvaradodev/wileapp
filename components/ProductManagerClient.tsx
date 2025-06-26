@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, Edit2, Package, Search, Filter, ChefHat, X, Sparkles, 
+import {
+  Plus, Edit2, Package, Search, Filter, ChefHat, X, Sparkles,
   DollarSign, TrendingUp, Archive, Zap, ShoppingBag, Trash2, Box,
   Grid3X3, List, LayoutGrid, Eye, EyeOff, Star, AlertTriangle
 } from 'lucide-react';
-import { 
-  Product, Category, Combo, ComboItem, ProductFormData, 
+import {
+  Product, Category, Combo, ComboItem, ProductFormData,
   SearchableSelectOption, ComboFormData
 } from '@/../lib/types';
-import { 
-  createProduct, updateProduct, createCategory, 
-  deleteProduct, getCombos, createCombo, 
+import {
+  createProduct, updateProduct, createCategory,
+  deleteProduct, getCombos, createCombo,
   updateCombo, deleteCombo
 } from '@/../lib/api';
 import { formatCurrency, convertBsToUsd, getCategoryColor, getCategoryEmoji, createSearchableOptions } from '../lib/utils';
@@ -92,7 +92,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
         console.error('Error loading combos:', error);
       }
     };
-    
+
     loadCombos();
   }, []);
 
@@ -116,7 +116,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
         is_active: productFormData.is_active,
         product_type: productFormData.product_type
       };
-      
+
       if (editingProduct) {
         const updatedProduct = await updateProduct(editingProduct.id, productData);
         setProducts(products.map(p => p.id === editingProduct.id ? updatedProduct : p));
@@ -144,7 +144,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
         discount_percentage: parseFloat(comboFormData.discount_percentage),
         is_active: comboFormData.is_active,
         sale_price: (() => {
-          // Calculate sale price for the combo
           const basePrice = comboItems.reduce((total, item) => {
             const product = products.find(p => p.id === item.product_id);
             return total + (product ? product.sale_price * item.quantity : 0);
@@ -152,14 +151,13 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
           return basePrice * (1 - parseFloat(comboFormData.discount_percentage) / 100);
         })(),
         total_cost: (() => {
-          // Calculate total cost for the combo
           return comboItems.reduce((total, item) => {
             const product = products.find(p => p.id === item.product_id);
             return total + (product ? product.cost_price * item.quantity : 0);
           }, 0);
         })()
       };
-      
+
       if (editingCombo) {
         const updatedCombo = await updateCombo(editingCombo.id, comboData, comboItems);
         setCombos(combos.map(c => c.id === editingCombo.id ? updatedCombo : c));
@@ -275,12 +273,12 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
       discount_percentage: combo.discount_percentage.toString(),
       is_active: combo.is_active
     });
-    
+
     const items = combo.combo_items?.map(item => ({
       product_id: item.product_id,
       quantity: item.quantity
     })) || [];
-    
+
     setComboItems(items);
     setEditingCombo(combo);
     setShowComboForm(true);
@@ -305,7 +303,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
       const product = products.find(p => p.id === item.product_id);
       return total + (product ? product.sale_price * item.quantity : 0);
     }, 0) || 0;
-    
+
     return basePrice * (1 - combo.discount_percentage / 100);
   };
 
@@ -316,7 +314,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
     }, 0) || 0;
   };
 
-  // Filter and sort products
   const filteredAndSortedProducts = products
     .filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -326,7 +323,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
     })
     .sort((a, b) => {
       let aValue, bValue;
-      
+
       switch (sortBy) {
         case 'price':
           aValue = a.sale_price;
@@ -352,13 +349,11 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
       }
     });
 
-  // Filter combos
-  const filteredCombos = combos.filter(combo => 
+  const filteredCombos = combos.filter(combo =>
     combo.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (categoryFilter === 'all' || true) // Ajustar si los combos tienen categoría
+    (categoryFilter === 'all' || true)
   );
 
-  // Create searchable options
   const categoryOptions = createSearchableOptions(
     categories,
     'id',
@@ -378,15 +373,14 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
   const renderProductCard = (product: Product) => {
     const profitMargin = calculateProfitMargin(product.sale_price, product.cost_price);
     const isLowStock = product.stock_quantity <= 5;
-    
+
     return (
-      <AnimatedCard 
+      <AnimatedCard
         key={product.id}
         className="relative group overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800/50 border-2 border-gray-200/60 dark:border-gray-700/60 hover:border-purple-300 dark:hover:border-purple-600 shadow-lg hover:shadow-xl transition-all duration-300"
         hoverEffect
         glowEffect
       >
-        {/* Status Badges */}
         <div className="absolute top-3 right-3 z-20 flex flex-col space-y-1">
           {!product.is_active && (
             <Badge variant="secondary" className="text-xs animate-pulse bg-gray-500 text-white">
@@ -406,9 +400,9 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
             </Badge>
           )}
         </div>
-
-        {/* Product Actions */}
-        <div className="absolute top-3 left-3 flex space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+        
+        {/* CAMBIO PARA ACCIONES MÓVILES: Estas acciones de escritorio ahora están ocultas en móvil (hidden) y solo se muestran a partir de md (md:flex) */}
+        <div className="hidden md:flex absolute top-3 left-3 space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
           <Button
             variant="ghost"
             size="icon"
@@ -427,7 +421,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
           </Button>
         </div>
 
-        {/* Product Icon/Avatar */}
         <div className="flex items-center justify-between mb-4">
           <div className={`w-16 h-16 bg-gradient-to-br ${getCategoryColor(product.categories?.name)} rounded-2xl flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border-2 border-white/20`}>
             {getCategoryEmoji(product.categories?.name)}
@@ -440,10 +433,33 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
           </div>
         </div>
 
-        {/* Product Info */}
         <div className="space-y-3">
           <div>
-            <h3 className="font-bold text-lg leading-tight mb-2 text-gray-900 dark:text-gray-100">{product.name}</h3>
+            {/* CAMBIO PARA ACCIONES MÓVILES: Se añade un contenedor flex para alinear el título a la izquierda y los nuevos botones a la derecha */}
+            <div className="flex justify-between items-start gap-2">
+              <h3 className="font-bold text-lg leading-tight mb-2 text-gray-900 dark:text-gray-100 flex-1">{product.name}</h3>
+
+              {/* CAMBIO PARA ACCIONES MÓVILES: Este es el nuevo contenedor de botones, visible solo en móvil (flex) y oculto a partir de md (md:hidden) */}
+              <div className="flex flex-shrink-0 md:hidden space-x-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEditProduct(product)}
+                  className="h-7 w-7"
+                >
+                  <Edit2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeleteProduct(product.id)}
+                  className="h-7 w-7"
+                >
+                  <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
+                </Button>
+              </div>
+            </div>
+
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="text-xs bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700">
                 {product.categories?.name || 'Sin categoría'}
@@ -460,7 +476,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
             </p>
           )}
 
-          {/* Price Information */}
           <div className="space-y-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 p-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Precio:</span>
@@ -473,7 +488,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Costo:</span>
               <div className="text-right">
@@ -485,14 +500,14 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">Stock:</span>
               <span className={`font-bold ${isLowStock ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-blue-600 dark:text-blue-400'}`}>
                 {product.stock_quantity} {product.unit}
               </span>
             </div>
-            
+
             <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Margen:</span>
               <div className="flex items-center space-x-2">
@@ -511,21 +526,21 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
   const renderProductList = (product: Product) => {
     const profitMargin = calculateProfitMargin(product.sale_price, product.cost_price);
     const isLowStock = product.stock_quantity <= 5;
-    
+
     return (
-      <AnimatedCard 
+      <AnimatedCard
         key={product.id}
         className="group hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-blue-50/50 dark:hover:from-purple-900/20 dark:hover:to-blue-900/20 transition-all duration-300"
         hoverEffect
       >
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-4 flex-1">
-            <div className={`w-12 h-12 bg-gradient-to-br ${getCategoryColor(product.categories?.name)} rounded-xl flex items-center justify-center text-2xl shadow-md`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-4">
+          <div className="flex items-center space-x-4 flex-1 w-full">
+            <div className={`w-12 h-12 bg-gradient-to-br ${getCategoryColor(product.categories?.name)} rounded-xl flex items-center justify-center text-2xl shadow-md flex-shrink-0`}>
               {getCategoryEmoji(product.categories?.name)}
             </div>
-            
+
             <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-1">
+              <div className="flex items-center flex-wrap gap-x-3 mb-1">
                 <h3 className="font-bold text-gray-900 dark:text-gray-100">{product.name}</h3>
                 {!product.is_active && (
                   <Badge variant="secondary" className="text-xs">Inactivo</Badge>
@@ -538,20 +553,20 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 )}
               </div>
               
-              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
                 <span>{product.categories?.name || 'Sin categoría'}</span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span>{product.stock_quantity} {product.unit}</span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span className={`font-medium ${profitMargin > 30 ? 'text-green-600 dark:text-green-400' : profitMargin > 15 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
                   {profitMargin.toFixed(1)}% margen
                 </span>
               </div>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-6">
-            <div className="text-right">
+
+          <div className="flex items-center justify-between w-full sm:w-auto sm:justify-end sm:space-x-6">
+            <div className="text-left sm:text-right">
               <p className="font-bold text-lg text-green-600 dark:text-green-400">
                 {formatCurrency(product.sale_price, 'VES')}
               </p>
@@ -560,7 +575,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
               </p>
             </div>
             
-            <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+            <div className="flex items-center space-x-2 flex sm:opacity-0 group-hover:opacity-100 transition-all duration-300">
               <Button
                 variant="ghost"
                 size="icon"
@@ -587,22 +602,20 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
   const renderProductGrid = (product: Product) => {
     const profitMargin = calculateProfitMargin(product.sale_price, product.cost_price);
     const isLowStock = product.stock_quantity <= 5;
-    
+
     return (
-      <div 
+      <div
         key={product.id}
         className="group p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 bg-white dark:bg-gray-900 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
       >
-        {/* Background gradient on hover */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-50/0 to-blue-50/0 group-hover:from-purple-50/50 group-hover:to-blue-50/50 dark:group-hover:from-purple-900/20 dark:group-hover:to-blue-900/20 transition-all duration-300"></div>
-        
+
         <div className="relative z-10">
-          {/* Header with actions */}
           <div className="flex items-start justify-between mb-3">
             <div className={`w-10 h-10 bg-gradient-to-br ${getCategoryColor(product.categories?.name)} rounded-lg flex items-center justify-center text-xl shadow-md`}>
               {getCategoryEmoji(product.categories?.name)}
             </div>
-            
+
             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
               <Button
                 variant="ghost"
@@ -622,13 +635,12 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
               </Button>
             </div>
           </div>
-          
-          {/* Product info */}
+
           <div className="space-y-2">
             <h3 className="font-bold text-sm leading-tight text-gray-900 dark:text-gray-100 line-clamp-2">
               {product.name}
             </h3>
-            
+
             <div className="flex flex-wrap gap-1">
               {!product.is_active && (
                 <Badge variant="secondary" className="text-xs">Inactivo</Badge>
@@ -637,7 +649,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 <Badge variant="destructive" className="text-xs">Stock Bajo</Badge>
               )}
             </div>
-            
+
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-gray-600 dark:text-gray-400">Precio:</span>
@@ -645,14 +657,14 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                   {formatCurrency(product.sale_price, 'VES')}
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center mt-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">Stock:</span>
                 <span className={`text-xs font-medium ${isLowStock ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
                   {product.stock_quantity}
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center mt-1">
                 <span className="text-xs text-gray-600 dark:text-gray-400">Margen:</span>
                 <span className={`text-xs font-bold ${profitMargin > 30 ? 'text-green-600 dark:text-green-400' : profitMargin > 15 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
@@ -668,7 +680,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-purple-950/30 relative overflow-hidden">
-      {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-10 left-10 text-6xl opacity-5 dark:opacity-10 animate-bounce" style={{ animationDelay: '0s', animationDuration: '4s' }}>🍦</div>
         <div className="absolute top-32 right-20 text-4xl opacity-5 dark:opacity-10 animate-bounce" style={{ animationDelay: '2s', animationDuration: '5s' }}>🧁</div>
@@ -677,9 +688,8 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
         <div className="absolute bottom-32 right-1/3 text-4xl opacity-5 dark:opacity-10 animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '3.5s' }}>🧪</div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
-        {/* Header Section */}
-        <AnimatedCard 
+      <div className="relative z-10 space-y-8 p-4 md:p-6">
+        <AnimatedCard
           className="bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white shadow-2xl"
           glowEffect
         >
@@ -689,36 +699,36 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 <Package className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent">
                   Gestión de Productos y Combos
                 </h1>
-                <p className="text-purple-100 text-lg mt-1 flex items-center">
+                <p className="text-purple-100 text-base lg:text-lg mt-1 flex items-center">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Administra tu inventario con estilo y precisión
                 </p>
               </div>
             </div>
             
-            <div className="flex flex-wrap gap-3">
-              <Button 
-                onClick={() => setShowCategoryForm(true)} 
-                variant="outline" 
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 w-full lg:w-auto">
+              <Button
+                onClick={() => setShowCategoryForm(true)}
+                variant="outline"
                 className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm hover:scale-105 transition-transform"
               >
                 <Box className="w-4 h-4 mr-2" />
                 Nueva Categoría
               </Button>
-              <Button 
-                onClick={() => { setActiveTab('combos'); setShowComboForm(true); }} 
-                variant="outline" 
+              <Button
+                onClick={() => { setActiveTab('combos'); setShowComboForm(true); }}
+                variant="outline"
                 className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm hover:scale-105 transition-transform"
               >
                 <ShoppingBag className="w-4 h-4 mr-2" />
                 Nuevo Combo
               </Button>
-              <Button 
-                onClick={() => { setActiveTab('products'); setShowProductForm(true); }} 
-                variant="outline" 
+              <Button
+                onClick={() => { setActiveTab('products'); setShowProductForm(true); }}
+                variant="outline"
                 className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm hover:scale-105 transition-transform"
               >
                 <Package className="w-4 h-4 mr-2" />
@@ -726,8 +736,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
               </Button>
             </div>
           </div>
-          
-          {/* Stats Row */}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">
               <div className="flex items-center space-x-2">
@@ -760,21 +769,19 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
           </div>
         </AnimatedCard>
 
-        {/* Tabs for Products and Combos */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 h-14 bg-white dark:bg-gray-900 border-2 border-purple-200 dark:border-purple-800">
-            <TabsTrigger value="products" className="flex items-center space-x-2 text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+            <TabsTrigger value="products" className="flex items-center space-x-2 text-sm sm:text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
               <Package className="w-5 h-5" />
               <span>Productos</span>
             </TabsTrigger>
-            <TabsTrigger value="combos" className="flex items-center space-x-2 text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">
+            <TabsTrigger value="combos" className="flex items-center space-x-2 text-sm sm:text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">
               <ShoppingBag className="w-5 h-5" />
               <span>Combos</span>
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="products" className="space-y-6 mt-6">
-            {/* Enhanced Filters Section for Products */}
             <AnimatedCard className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-2 border-purple-200/50 dark:border-purple-800/50">
               <div className="space-y-4">
                 <div className="flex flex-col lg:flex-row gap-4">
@@ -789,8 +796,8 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                   </div>
                   
                   <div className="flex items-center space-x-3">
-                    <ViewToggle 
-                      view={viewMode} 
+                    <ViewToggle
+                      view={viewMode}
                       onViewChange={setViewMode}
                       className="flex-shrink-0"
                     />
@@ -802,7 +809,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                     >
                       {showInactive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                       <span className="hidden sm:inline">
-                        {showInactive ? 'Ocultar Inactivos' : 'Mostrar Inactivos'}
+                        {showInactive ? 'Ocultar' : 'Mostrar'} Inactivos
                       </span>
                     </Button>
                   </div>
@@ -849,7 +856,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                     </SelectContent>
                   </Select>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-center space-x-2">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {filteredAndSortedProducts.length} productos
                     </span>
@@ -858,7 +865,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
               </div>
             </AnimatedCard>
 
-            {/* Products Display */}
             {viewMode === 'cards' && (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                 {filteredAndSortedProducts.map(renderProductCard)}
@@ -877,20 +883,19 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
               </div>
             )}
 
-            {/* Empty State for Products */}
             {filteredAndSortedProducts.length === 0 && (
               <AnimatedCard className="text-center py-12 bg-gradient-to-br from-gray-50 to-purple-50/30 dark:from-gray-900 dark:to-purple-900/30">
                 <div className="space-y-4">
                   <div className="text-8xl animate-bounce">😿</div>
                   <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400">No se encontraron productos</h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    {searchTerm || categoryFilter !== 'all' 
-                      ? 'Prueba ajustando los filtros de búsqueda' 
+                    {searchTerm || categoryFilter !== 'all'
+                      ? 'Prueba ajustando los filtros de búsqueda'
                       : 'Comienza creando tu primer producto'
                     }
                   </p>
                   {!searchTerm && categoryFilter === 'all' && (
-                    <Button 
+                    <Button
                       onClick={() => setShowProductForm(true)}
                       className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 mt-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     >
@@ -904,7 +909,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
           </TabsContent>
           
           <TabsContent value="combos" className="space-y-6 mt-6">
-            {/* Filters Section for Combos */}
             <AnimatedCard className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-2 border-blue-200/50 dark:border-blue-800/50">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1 relative">
@@ -916,27 +920,25 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                     className="pl-12 h-12 bg-white/60 dark:bg-gray-800/60 backdrop-blur border-2 border-blue-200 dark:border-blue-700 focus:border-blue-400 dark:focus:border-blue-500 text-base"
                   />
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                <div className="text-sm text-gray-600 dark:text-gray-400 flex items-center justify-center">
                   {filteredCombos.length} combos encontrados
                 </div>
               </div>
             </AnimatedCard>
 
-            {/* Combos Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {filteredCombos.map((combo) => {
                 const comboPrice = calculateComboPrice(combo);
                 const comboCost = calculateComboCost(combo);
                 const profitMargin = calculateProfitMargin(comboPrice, comboCost);
-                
+
                 return (
-                  <AnimatedCard 
+                  <AnimatedCard
                     key={combo.id}
                     className="relative group overflow-hidden bg-gradient-to-br from-white via-white to-blue-50/50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/20 border-2 border-blue-200/60 dark:border-blue-700/60 hover:border-blue-400 dark:hover:border-blue-500 shadow-lg hover:shadow-xl transition-all duration-300"
                     hoverEffect
                     glowEffect
                   >
-                    {/* Combo Actions */}
                     <div className="absolute top-3 left-3 flex space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
                       <Button
                         variant="ghost"
@@ -956,7 +958,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                       </Button>
                     </div>
 
-                    {/* Combo Icon/Avatar */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border-2 border-white/20">
                         🎁
@@ -969,7 +970,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                       </div>
                     </div>
 
-                    {/* Combo Info */}
                     <div className="space-y-3">
                       <div>
                         <h3 className="font-bold text-lg leading-tight mb-2 text-gray-900 dark:text-gray-100">{combo.name}</h3>
@@ -980,7 +980,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                         )}
                       </div>
 
-                      {/* Price Information */}
                       <div className="space-y-3 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 p-3 rounded-xl border border-gray-200/50 dark:border-gray-700/50">
                         <div className="flex justify-between items-center">
                           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Precio:</span>
@@ -993,7 +992,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Costo:</span>
                           <div className="text-right">
@@ -1005,14 +1004,14 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="flex justify-between items-center">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Descuento:</span>
                           <span className="font-bold text-purple-600 dark:text-purple-400">
                             {combo.discount_percentage}%
                           </span>
                         </div>
-                        
+
                         <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-700">
                           <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Margen:</span>
                           <div className="flex items-center space-x-2">
@@ -1024,7 +1023,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                         </div>
                       </div>
 
-                      {/* Combo Items */}
                       <div className="pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
                         <div className="flex items-center space-x-2 text-sm mb-2">
                           <Box className="w-4 h-4 text-blue-500" />
@@ -1050,20 +1048,19 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
               })}
             </div>
 
-            {/* Empty State for Combos */}
             {filteredCombos.length === 0 && (
               <AnimatedCard className="text-center py-12 bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-900 dark:to-blue-900/30">
                 <div className="space-y-4">
                   <div className="text-8xl animate-bounce">🎁</div>
                   <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400">No se encontraron combos</h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    {searchTerm 
-                      ? 'Prueba ajustando los filtros de búsqueda' 
+                    {searchTerm
+                      ? 'Prueba ajustando los filtros de búsqueda'
                       : 'Comienza creando tu primer combo'
                     }
                   </p>
                   {!searchTerm && (
-                    <Button 
+                    <Button
                       onClick={() => setShowComboForm(true)}
                       className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 mt-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     >
@@ -1077,7 +1074,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
           </TabsContent>
         </Tabs>
 
-        {/* Floating Action Button */}
         <FloatingActionButton
           onClick={() => activeTab === 'products' ? setShowProductForm(true) : setShowComboForm(true)}
           icon={<Plus className="w-6 h-6" />}
@@ -1117,7 +1113,6 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                   <SearchableSelect
                     options={categoryOptions}
                     value={productFormData.category_id}
-                    // Prevent form submit on category change
                     onValueChange={(value) => {
                       setProductFormData({ ...productFormData, category_id: value });
                     }}
@@ -1217,8 +1212,8 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 <Button type="button" variant="outline" onClick={resetProductForm} className="w-full sm:w-auto">
                   Cancelar
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={loading}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto"
                 >
@@ -1291,14 +1286,13 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 />
               </div>
 
-              {/* Combo Items */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <Label className="flex items-center text-lg">
                     <Box className="w-5 h-5 mr-2 text-blue-500" />
-                    Productos incluidos en el combo
+                    Productos del combo
                   </Label>
-                  <Button type="button" onClick={addComboItem} variant="outline" size="sm" className="hover:scale-105 transition-transform">
+                  <Button type="button" onClick={addComboItem} variant="outline" size="sm" className="hover:scale-105 transition-transform self-end sm:self-center">
                     <Plus className="w-4 h-4 mr-1" />
                     Agregar Producto
                   </Button>
@@ -1306,8 +1300,8 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {comboItems.map((item, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-xl border backdrop-blur">
-                      <div className="flex-1">
+                    <div key={index} className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 p-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-xl border backdrop-blur">
+                      <div className="flex-1 w-full">
                         <SearchableSelect
                           options={productOptions}
                           value={item.product_id}
@@ -1315,25 +1309,27 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                           placeholder="Seleccionar producto"
                         />
                       </div>
-                      <div className="w-28">
-                        <Input
-                          type="number"
-                          min="1"
-                          placeholder="Cantidad"
-                          value={item.quantity}
-                          onChange={(e) => updateComboItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                          className="h-10"
-                        />
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="w-full sm:w-28">
+                          <Input
+                            type="number"
+                            min="1"
+                            placeholder="Cantidad"
+                            value={item.quantity}
+                            onChange={(e) => updateComboItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                            className="h-10 text-center"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeComboItem(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 flex-shrink-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeComboItem(index)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
                     </div>
                   ))}
                 </div>
@@ -1343,8 +1339,8 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 <Button type="button" variant="outline" onClick={resetComboForm} className="w-full sm:w-auto">
                   Cancelar
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={loading}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 w-full sm:w-auto"
                 >
@@ -1395,8 +1391,8 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                 <Button type="button" variant="outline" onClick={resetCategoryForm}>
                   Cancelar
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={loading}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                 >

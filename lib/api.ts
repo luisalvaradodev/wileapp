@@ -43,6 +43,113 @@ export async function fetchExchangeRate(): Promise<ExchangeRateInfo> {
   }
 }
 
+export async function deleteSale(saleId: string): Promise<void> {
+  // 1. Obtener los artículos de la venta para saber qué stock restaurar.
+  const { data: saleItems, error: itemsError } = await supabase
+    .from('sale_items')
+    .select('*')
+    .eq('sale_id', saleId);
+
+  if (itemsError) {
+    console.error('Error fetching sale items for deletion:', itemsError);
+    throw new Error('No se pudieron obtener los artículos de la venta.');
+  }
+
+  // 2. Restaurar el stock de cada producto.
+  // Usamos el mismo RPC pero con una cantidad negativa para sumar al stock.
+  if (saleItems) {
+    for (const item of saleItems) {
+        // Asegurarse de que el producto todavía existe antes de intentar devolver el stock
+        const productInfo = await supabase.from('products').select('id').eq('id', item.product_id).single();
+        if (productInfo.data) {
+            await supabase.rpc('update_product_stock', {
+                p_product_id: item.product_id,
+                p_quantity_sold: -item.quantity // Cantidad negativa para revertir la venta
+            });
+        }
+    }
+  }
+
+  // 3. Eliminar la venta de la tabla 'sales'.
+  // Si tienes 'ON DELETE CASCADE' en tu base de datos para `sale_items`,
+  // esto también eliminará los `sale_items` automáticamente.
+  const { error: deleteError } = await supabase
+    .from('sales')
+    .delete()
+    .eq('id', saleId);
+
+  if (deleteError) {
+    console.error('Error deleting sale:', deleteError);
+    throw new Error('Error al eliminar la venta.');
+  }
+}
+
+export async function updateSale(
+  saleId: string,
+  saleUpdates: Partial<Omit<Sale, 'id' | 'created_at' | 'updated_at'>>,
+  newItems: Omit<SaleItem, 'id' | 'sale_id'>[],
+  originalItems: Pick<SaleItem, 'product_id' | 'quantity'>[]
+): Promise<Sale> {
+  // 1. Calcular las diferencias de stock para ajustar el inventario.
+  const stockAdjustments = new Map<string, number>();
+
+  // Crea un mapa de los artículos originales para facilitar la búsqueda.
+  const originalItemsMap = new Map(originalItems.map(item => [item.product_id, item.quantity]));
+  
+  // Itera sobre los nuevos artículos para ver qué se añadió o cambió.
+  for (const newItem of newItems) {
+    if (newItem.product_id) {
+      const originalQuantity = originalItemsMap.get(newItem.product_id) || 0;
+      const difference = newItem.quantity - originalQuantity;
+      if (difference !== 0) {
+        stockAdjustments.set(newItem.product_id, (stockAdjustments.get(newItem.product_id) || 0) + difference);
+      }
+      // Elimina el artículo del mapa original para saber cuáles fueron eliminados al final.
+      originalItemsMap.delete(newItem.product_id);
+    }
+  }
+
+  // Los artículos que quedan en originalItemsMap fueron eliminados por completo.
+  for (const [productId, originalQuantity] of originalItemsMap.entries()) {
+    if (productId) {
+      stockAdjustments.set(productId, (stockAdjustments.get(productId) || 0) - originalQuantity);
+    }
+  }
+
+  // 2. Aplicar los ajustes de stock en la base de datos.
+  for (const [productId, quantitySold] of stockAdjustments.entries()) {
+    if (quantitySold !== 0) {
+      const { error: rpcError } = await supabase.rpc('update_product_stock', {
+        p_product_id: productId,
+        p_quantity_sold: quantitySold,
+      });
+      if (rpcError) throw new Error(`Error ajustando stock para producto ${productId}: ${rpcError.message}`);
+    }
+  }
+
+  // 3. Actualizar el registro principal de la venta.
+  const { data: updatedSaleData, error: saleUpdateError } = await supabase
+    .from('sales')
+    .update({ ...saleUpdates, updated_at: new Date().toISOString() })
+    .eq('id', saleId)
+    .select()
+    .single();
+
+  if (saleUpdateError) throw saleUpdateError;
+
+  // 4. Eliminar los artículos de venta antiguos.
+  await supabase.from('sale_items').delete().eq('sale_id', saleId);
+
+  // 5. Insertar los nuevos artículos de venta.
+  const saleItemsToInsert = newItems.map(item => ({ ...item, sale_id: saleId }));
+  const { error: itemsInsertError } = await supabase.from('sale_items').insert(saleItemsToInsert);
+
+  if (itemsInsertError) throw itemsInsertError;
+
+  return updatedSaleData;
+}
+
+
 export async function updateCombo(
   id: string, 
   updates: Partial<Combo>, 
