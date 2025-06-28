@@ -101,8 +101,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
     return ((salePrice - costPrice) / costPrice * 100);
   };
 
-  const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleProductSubmit = async () => {
     try {
       setLoading(true);
       const productData = {
@@ -1094,7 +1093,7 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={handleProductSubmit} className="space-y-6">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nombre del producto</Label>
@@ -1213,7 +1212,8 @@ export const ProductManagerClient: React.FC<ProductManagerClientProps> = ({
                   Cancelar
                 </Button>
                 <Button
-                  type="submit"
+                  type="button" 
+                  onClick={handleProductSubmit}
                   disabled={loading}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto"
                 >
